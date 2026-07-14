@@ -5,11 +5,14 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
-import { FolderClosed, ChevronLeft, ArrowRight } from 'lucide-react-native';
-import { useTameStore, TameItem } from '../../store/useTameStore';
+import { FolderClosed, ChevronLeft, ArrowRight, Plus, Trash2, X } from 'lucide-react-native';
+import Toast from 'react-native-toast-message';
+import * as Haptics from 'expo-haptics';
+import { useStashStore, StashItem } from '../../store/useStashStore';
 import { LinkCard } from '../../components/LinkCard';
 import { EmptyState } from '../../components/EmptyState';
 import { useThemeColors, SPACING, TYPOGRAPHY, LAYOUT } from '../../styles/theme';
@@ -21,10 +24,17 @@ type FolderData = {
 
 export default function FoldersScreen() {
   const colors = useThemeColors();
-  const items = useTameStore((state) => state.items);
+  const items = useStashStore((state) => state.items);
+  const customFolders = useStashStore((state) => state.folders);
+  const createFolder = useStashStore((state) => state.createFolder);
+  const deleteFolder = useStashStore((state) => state.deleteFolder);
 
   // Active folder selection for in-page drill down
   const [activeFolder, setActiveFolder] = useState<string | null>(null);
+  
+  // Create Folder Modal State
+  const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
 
   // Aggregate unique folders and count items
   const folderList = useMemo((): FolderData[] => {
@@ -40,6 +50,11 @@ export default function FoldersScreen() {
       }
     });
 
+    // Add custom folders that might have 0 items
+    customFolders.forEach(folder => {
+      if (!counts[folder]) counts[folder] = 0;
+    });
+
     const list: FolderData[] = Object.keys(counts).map((name) => ({
       name,
       count: counts[name],
@@ -51,10 +66,10 @@ export default function FoldersScreen() {
     }
 
     return list;
-  }, [items]);
+  }, [items, customFolders]);
 
   // Items for the currently selected folder
-  const activeFolderItems = useMemo((): TameItem[] => {
+  const activeFolderItems = useMemo((): StashItem[] => {
     if (!activeFolder) return [];
 
     return items.filter((item) => {
@@ -70,6 +85,24 @@ export default function FoldersScreen() {
     setActiveFolder(null);
   };
 
+  const handleCreateFolder = () => {
+    const name = newFolderName.trim();
+    if (!name) return;
+    createFolder(name);
+    setCreateModalVisible(false);
+    setNewFolderName('');
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    Toast.show({ type: 'success', text1: 'Folder Created', text2: name });
+  };
+
+  const handleDeleteFolder = () => {
+    if (!activeFolder) return;
+    deleteFolder(activeFolder);
+    setActiveFolder(null);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    Toast.show({ type: 'success', text1: 'Folder Deleted', text2: activeFolder });
+  };
+
   if (activeFolder) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -82,7 +115,13 @@ export default function FoldersScreen() {
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]} numberOfLines={1}>
             {activeFolder}
           </Text>
-          <View style={{ width: 60 }} />
+          <View style={{ width: 80, alignItems: 'flex-end' }}>
+            {customFolders.includes(activeFolder) && (
+              <TouchableOpacity onPress={handleDeleteFolder} style={{ padding: 8 }}>
+                <Trash2 size={20} color={colors.textSecondary} />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
         {/* Folder items feed */}
@@ -105,7 +144,9 @@ export default function FoldersScreen() {
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <View style={{ width: 40 }} />
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Folders</Text>
-        <View style={{ width: 40 }} />
+        <TouchableOpacity style={{ width: 40, alignItems: 'flex-end', padding: 8 }} onPress={() => setCreateModalVisible(true)}>
+          <Plus size={24} color={colors.textSecondary} />
+        </TouchableOpacity>
       </View>
 
       {items.length === 0 ? (
@@ -141,6 +182,31 @@ export default function FoldersScreen() {
             </TouchableOpacity>
           )}
         />
+      )}
+
+      {/* Create Folder Modal */}
+      {createModalVisible && (
+        <View style={styles.modalBackdrop}>
+          <View style={[styles.modalCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>New Folder</Text>
+              <TouchableOpacity onPress={() => setCreateModalVisible(false)}>
+                <X size={20} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            <TextInput
+              value={newFolderName}
+              onChangeText={setNewFolderName}
+              placeholder="Folder name..."
+              placeholderTextColor={colors.textSecondary}
+              style={[styles.modalInput, { backgroundColor: colors.surfaceRaised, borderColor: colors.border, color: colors.textPrimary }]}
+              autoFocus
+            />
+            <TouchableOpacity style={[styles.submitButton, { backgroundColor: colors.accent }]} onPress={handleCreateFolder}>
+              <Text style={[styles.submitButtonText, { color: '#0E0E0E' }]}>Create Folder</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       )}
     </SafeAreaView>
   );
@@ -211,5 +277,42 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
     paddingHorizontal: 20,
     paddingTop: 16,
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    padding: 24,
+    zIndex: 100,
+  },
+  modalCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    ...TYPOGRAPHY.headingSm,
+  },
+  modalInput: {
+    ...TYPOGRAPHY.body,
+    borderRadius: 8,
+    borderWidth: 1,
+    padding: 12,
+    marginBottom: 20,
+  },
+  submitButton: {
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  submitButtonText: {
+    fontSize: 15,
+    fontFamily: 'DMSans_600SemiBold',
   },
 });

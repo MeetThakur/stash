@@ -12,11 +12,11 @@ import { Image } from 'expo-image';
 import { Link } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Film, Video, FileText, Clipboard, Heart, Trash2 } from 'lucide-react-native';
-import { TameItem, useTameStore } from '../store/useTameStore';
+import { StashItem, useStashStore } from '../store/useStashStore';
 import { useThemeColors, SPACING, TYPOGRAPHY, LAYOUT } from '../styles/theme';
 
 interface LinkCardProps {
-  item: TameItem;
+  item: StashItem;
   index: number;
 }
 
@@ -34,8 +34,8 @@ function formatSavedAt(timestamp: number) {
 
 export function LinkCard({ item, index }: LinkCardProps) {
   const colors = useThemeColors();
-  const toggleFavorite = useTameStore((state) => state.toggleFavorite);
-  const deleteItem = useTameStore((state) => state.deleteItem);
+  const toggleFavorite = useStashStore((state) => state.toggleFavorite);
+  const deleteItem = useStashStore((state) => state.deleteItem);
 
   const screenWidth = Dimensions.get('window').width;
   const SWIPE_THRESHOLD = 80;

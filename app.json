@@ -1,17 +1,17 @@
 {
   "expo": {
-    "name": "Tame",
-    "slug": "tame",
+    "name": "Stash",
+    "slug": "stash",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "tame",
+    "scheme": "stash",
     "userInterfaceStyle": "dark",
     "ios": {
       "icon": "./assets/expo.icon"
     },
     "android": {
-      "package": "com.meetthakur.tame",
+      "package": "com.meetthakur.stash",
       "adaptiveIcon": {
         "backgroundColor": "#0E0E0E",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

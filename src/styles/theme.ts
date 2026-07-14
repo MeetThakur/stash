@@ -1,5 +1,5 @@
 import { useColorScheme } from 'react-native';
-import { useTameStore } from '../store/useTameStore';
+import { useStashStore } from '../store/useStashStore';
 
 export const COLORS = {
   dark: {
@@ -67,7 +67,7 @@ export const LAYOUT = {
 };
 
 export function useThemeColors() {
-  const storeTheme = useTameStore((state) => state.theme);
+  const storeTheme = useStashStore((state) => state.theme);
   const systemScheme = useColorScheme();
   
   const activeScheme = (storeTheme === 'system' ? (systemScheme || 'dark') : storeTheme) as 'dark' | 'light';

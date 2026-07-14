@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
 import { Search as SearchIcon, X, SlidersHorizontal, Sparkles, CornerDownLeft } from 'lucide-react-native';
-import { useTameStore, TameItem } from '../../store/useTameStore';
+import { useStashStore, StashItem } from '../../store/useStashStore';
 import * as Haptics from 'expo-haptics';
 import { LinkCard } from '../../components/LinkCard';
 import { EmptyState } from '../../components/EmptyState';
@@ -21,8 +21,8 @@ import { askGeminiAboutStash, AiAskResult } from '../../services/gemini';
 
 export default function SearchScreen() {
   const colors = useThemeColors();
-  const items = useTameStore((state) => state.items);
-  const geminiApiKey = useTameStore((state) => state.geminiApiKey);
+  const items = useStashStore((state) => state.items);
+  const geminiApiKey = useStashStore((state) => state.geminiApiKey);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string>('All');
@@ -68,7 +68,7 @@ export default function SearchScreen() {
       // 2. Type Filter
       let matchesType = true;
       if (selectedType !== 'All') {
-        const typeMap: Record<string, TameItem['type']> = {
+        const typeMap: Record<string, StashItem['type']> = {
           Reels: 'reel',
           Videos: 'video',
           Articles: 'article',
@@ -98,7 +98,7 @@ export default function SearchScreen() {
     if (!geminiApiKey) {
       Alert.alert(
         'Gemini API Key Required',
-        'Please enter your Gemini API Key in the Settings tab to use Tame AI Ask search.'
+        'Please enter your Gemini API Key in the Settings tab to use Stash AI Ask search.'
       );
       return;
     }
@@ -144,7 +144,7 @@ export default function SearchScreen() {
               setSearchQuery(val);
               if (aiResponse) setAiResponse(null);
             }}
-            placeholder={aiAskMode ? "Ask Tame AI about your saved items..." : "Search titles, summaries, tags..."}
+            placeholder={aiAskMode ? "Ask Stash AI about your saved items..." : "Search titles, summaries, tags..."}
             placeholderTextColor={colors.textSecondary}
             style={[styles.searchInput, { color: colors.textPrimary }]}
             autoCapitalize="none"
@@ -275,13 +275,13 @@ export default function SearchScreen() {
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={colors.accent} />
           <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
-            Consulting Tame AI...
+            Consulting Stash AI...
           </Text>
         </View>
       ) : aiAskMode && !aiResponse ? (
         <View style={styles.centerContainer}>
           <Sparkles size={32} color={colors.textSecondary} style={{ marginBottom: 12 }} />
-          <Text style={[styles.aiHintTitle, { color: colors.textPrimary }]}>Tame AI Ask</Text>
+          <Text style={[styles.aiHintTitle, { color: colors.textPrimary }]}>Stash AI Ask</Text>
           <Text style={[styles.aiHintText, { color: colors.textSecondary }]}>
             Ask questions like:{"\n"}
             • "What recipes did I save?"{"\n"}
@@ -296,7 +296,7 @@ export default function SearchScreen() {
             <View style={[styles.aiAnswerCard, { backgroundColor: colors.surfaceRaised, borderColor: colors.border }]}>
               <View style={styles.aiAnswerHeader}>
                 <Sparkles size={14} color={colors.accent} style={{ marginRight: 6 }} />
-                <Text style={[styles.aiAnswerTitle, { color: colors.accent }]}>Tame AI Answer</Text>
+                <Text style={[styles.aiAnswerTitle, { color: colors.accent }]}>Stash AI Answer</Text>
               </View>
               <Text style={[styles.aiAnswerText, { color: colors.textPrimary }]}>
                 {aiResponse.answer}

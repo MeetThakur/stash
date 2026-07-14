@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import Toast from 'react-native-toast-message';
 import {
   Plus,
   Sparkles,
@@ -28,8 +29,9 @@ import {
   Film,
   Video,
   FileText,
+  Folder,
 } from 'lucide-react-native';
-import { useTameStore, TameItem } from '../../store/useTameStore';
+import { useStashStore, StashItem } from '../../store/useStashStore';
 import { LinkCard } from '../../components/LinkCard';
 import { MasonryCard } from '../../components/MasonryCard';
 import { SkeletonCard } from '../../components/SkeletonCard';
@@ -42,15 +44,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type ListItem =
   | { type: 'header'; title: string }
-  | { type: 'item'; data: TameItem };
+  | { type: 'item'; data: StashItem };
 
 export default function HomeScreen() {
   const colors = useThemeColors();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   
-  const items = useTameStore((state) => state.items);
-  const addItem = useTameStore((state) => state.addItem);
+  const items = useStashStore((state) => state.items);
+  const folders = useStashStore((state) => state.folders);
+  const addItem = useStashStore((state) => state.addItem);
 
   // Layout & Filter States
   const [layout, setLayout] = useState<'grid' | 'list'>('grid');
@@ -62,6 +65,7 @@ export default function HomeScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [inputText, setInputText] = useState('');
   const [isUrl, setIsUrl] = useState(true);
+  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
 
   // Filter Items
   const filteredItems = items.filter((item) => {
@@ -83,9 +87,9 @@ export default function HomeScreen() {
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
     const weekAgoStart = todayStart - 7 * 24 * 60 * 60 * 1000;
 
-    const today: TameItem[] = [];
-    const thisWeek: TameItem[] = [];
-    const earlier: TameItem[] = [];
+    const today: StashItem[] = [];
+    const thisWeek: StashItem[] = [];
+    const earlier: StashItem[] = [];
 
     filteredItems.forEach((item) => {
       if (item.savedAt >= todayStart) {
@@ -160,13 +164,19 @@ export default function HomeScreen() {
       rawNoteText,
       aiSummary: null,
       aiTags: [],
-      folder: null,
+      folder: selectedFolder,
       status: 'pending',
     });
 
     setModalVisible(false);
     setInputText('');
+    setSelectedFolder(null);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    Toast.show({
+      type: 'success',
+      text1: 'Added to Stash',
+      text2: 'AI is processing it in the background...',
+    });
 
     // Run background enrichment
     processItemEnrichment(generatedId).catch((err) => {
@@ -191,7 +201,7 @@ export default function HomeScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Custom Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Tame</Text>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Stash</Text>
 
         <View style={styles.headerRight}>
           <TouchableOpacity
@@ -323,8 +333,8 @@ export default function HomeScreen() {
           data={filteredItems}
           masonry
           numColumns={2}
-          keyExtractor={(item: TameItem) => item.id}
-          renderItem={({ item, index }: { item: TameItem; index: number }) => {
+          keyExtractor={(item: StashItem) => item.id}
+          renderItem={({ item, index }: { item: StashItem; index: number }) => {
             if (item.status === 'pending') {
               return <SkeletonCard />;
             }
@@ -441,6 +451,42 @@ export default function HomeScreen() {
                 autoFocus
                 autoCapitalize="none"
               />
+
+              {folders.length > 0 && (
+                <View style={styles.folderSelector}>
+                  <Text style={[styles.folderSelectorTitle, { color: colors.textSecondary }]}>Save to Folder (Optional)</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.folderScroll}>
+                    <TouchableOpacity
+                      style={[
+                        styles.folderChip,
+                        {
+                          backgroundColor: selectedFolder === null ? colors.accent : colors.surfaceRaised,
+                          borderColor: selectedFolder === null ? colors.accent : colors.border,
+                        },
+                      ]}
+                      onPress={() => setSelectedFolder(null)}
+                    >
+                      <Text style={[styles.folderChipText, { color: selectedFolder === null ? '#0E0E0E' : colors.textPrimary }]}>None</Text>
+                    </TouchableOpacity>
+                    {folders.map(folder => (
+                      <TouchableOpacity
+                        key={folder}
+                        style={[
+                          styles.folderChip,
+                          {
+                            backgroundColor: selectedFolder === folder ? colors.accent : colors.surfaceRaised,
+                            borderColor: selectedFolder === folder ? colors.accent : colors.border,
+                          },
+                        ]}
+                        onPress={() => setSelectedFolder(folder)}
+                      >
+                        <Folder size={12} color={selectedFolder === folder ? '#0E0E0E' : colors.textSecondary} style={{ marginRight: 4 }} />
+                        <Text style={[styles.folderChipText, { color: selectedFolder === folder ? '#0E0E0E' : colors.textPrimary }]}>{folder}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
 
               {/* Submit CTA */}
               <TouchableOpacity
@@ -617,6 +663,28 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 20,
     textAlignVertical: 'top',
+  },
+  folderSelector: {
+    marginBottom: 20,
+  },
+  folderSelectorTitle: {
+    ...TYPOGRAPHY.meta,
+    marginBottom: 8,
+  },
+  folderScroll: {
+    gap: 8,
+  },
+  folderChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  folderChipText: {
+    fontSize: 12,
+    fontFamily: 'DMSans_500Medium',
   },
   submitButton: {
     borderRadius: LAYOUT.borderRadius,

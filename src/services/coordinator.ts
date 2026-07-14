@@ -1,9 +1,9 @@
-import { useTameStore } from '../store/useTameStore';
+import { useStashStore } from '../store/useStashStore';
 import { enrichLink } from './enrichment';
 import { getAiEnrichment } from './gemini';
 
 export async function processItemEnrichment(id: string): Promise<void> {
-  const store = useTameStore.getState();
+  const store = useStashStore.getState();
   const item = store.items.find((i) => i.id === id);
   if (!item) return;
 

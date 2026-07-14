@@ -11,12 +11,12 @@ import { Image } from 'expo-image';
 import { Link } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Heart, Trash2, Film, Video, FileText, Clipboard } from 'lucide-react-native';
-import { TameItem, useTameStore } from '../store/useTameStore';
+import { StashItem, useStashStore } from '../store/useStashStore';
 import { useThemeColors, SPACING, TYPOGRAPHY, LAYOUT } from '../styles/theme';
 import { ConfirmationModal } from './ConfirmationModal';
 
 interface MasonryCardProps {
-  item: TameItem;
+  item: StashItem;
   index: number;
 }
 
@@ -34,8 +34,8 @@ function formatSavedAt(timestamp: number) {
 
 export function MasonryCard({ item, index }: MasonryCardProps) {
   const colors = useThemeColors();
-  const toggleFavorite = useTameStore((state) => state.toggleFavorite);
-  const deleteItem = useTameStore((state) => state.deleteItem);
+  const toggleFavorite = useStashStore((state) => state.toggleFavorite);
+  const deleteItem = useStashStore((state) => state.deleteItem);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const translateYAnim = useRef(new Animated.Value(8)).current;

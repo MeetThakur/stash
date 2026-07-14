@@ -29,7 +29,7 @@ import {
   Clipboard,
 } from 'lucide-react-native';
 import { Image } from 'expo-image';
-import { useTameStore } from '../../store/useTameStore';
+import { useStashStore } from '../../store/useStashStore';
 import { useThemeColors, SPACING, TYPOGRAPHY, LAYOUT } from '../../styles/theme';
 import { ConfirmationModal } from '../../components/ConfirmationModal';
 
@@ -38,9 +38,9 @@ export default function ItemDetailScreen() {
   const router = useRouter();
   const colors = useThemeColors();
 
-  const items = useTameStore((state) => state.items);
-  const updateItem = useTameStore((state) => state.updateItem);
-  const deleteItem = useTameStore((state) => state.deleteItem);
+  const items = useStashStore((state) => state.items);
+  const updateItem = useStashStore((state) => state.updateItem);
+  const deleteItem = useStashStore((state) => state.deleteItem);
 
   const item = items.find((i) => i.id === id);
 

@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-export type TameItem = {
+import * as Crypto from 'expo-crypto';
+export type StashItem = {
   id: string;
   url: string;
   type: 'reel' | 'video' | 'article' | 'note';
@@ -18,33 +18,38 @@ export type TameItem = {
   status: 'pending' | 'enriched' | 'failed';
 };
 
-interface TameState {
-  items: TameItem[];
+interface StashState {
+  items: StashItem[];
+  folders: string[];
   geminiApiKey: string;
   theme: 'dark' | 'light' | 'system';
-  addItem: (item: Omit<TameItem, 'id' | 'savedAt' | 'isFavorite' | 'isRead'>) => string;
-  updateItem: (id: string, updates: Partial<TameItem>) => void;
+  addItem: (item: Omit<StashItem, 'id' | 'savedAt' | 'isFavorite' | 'isRead'>) => string;
+  updateItem: (id: string, updates: Partial<StashItem>) => void;
   deleteItem: (id: string) => void;
   toggleFavorite: (id: string) => void;
   toggleRead: (id: string) => void;
   setGeminiApiKey: (key: string) => void;
   setTheme: (theme: 'dark' | 'light' | 'system') => void;
+  createFolder: (name: string) => void;
+  deleteFolder: (name: string) => void;
+  renameFolder: (oldName: string, newName: string) => void;
   clearAll: () => void;
 }
 
 const generateId = () => {
-  return Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+  return Crypto.randomUUID();
 };
 
-export const useTameStore = create<TameState>()(
+export const useStashStore = create<StashState>()(
   persist(
     (set) => ({
       items: [],
+      folders: [],
       geminiApiKey: '',
       theme: 'dark',
       addItem: (itemData) => {
         const id = generateId();
-        const newItem: TameItem = {
+        const newItem: StashItem = {
           ...itemData,
           id,
           savedAt: Date.now(),
@@ -88,12 +93,29 @@ export const useTameStore = create<TameState>()(
       setTheme: (theme) => {
         set({ theme });
       },
+      createFolder: (name) => {
+        set((state) => ({
+          folders: state.folders.includes(name) ? state.folders : [...state.folders, name]
+        }));
+      },
+      deleteFolder: (name) => {
+        set((state) => ({
+          folders: state.folders.filter((f) => f !== name),
+          items: state.items.map((item) => item.folder === name ? { ...item, folder: null } : item)
+        }));
+      },
+      renameFolder: (oldName, newName) => {
+        set((state) => ({
+          folders: state.folders.map((f) => f === oldName ? newName : f),
+          items: state.items.map((item) => item.folder === oldName ? { ...item, folder: newName } : item)
+        }));
+      },
       clearAll: () => {
-        set({ items: [] });
+        set({ items: [], folders: [] });
       },
     }),
     {
-      name: 'tame-storage',
+      name: 'stash-storage',
       storage: createJSONStorage(() => AsyncStorage),
     }
   )

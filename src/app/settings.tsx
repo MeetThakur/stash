@@ -14,19 +14,19 @@ import * as Haptics from 'expo-haptics';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { ChevronLeft, Eye, EyeOff, Share2, Trash2, Key, SunMoon, Database } from 'lucide-react-native';
-import { useTameStore } from '../store/useTameStore';
+import { useStashStore } from '../store/useStashStore';
 import { useThemeColors, SPACING, TYPOGRAPHY, LAYOUT } from '../styles/theme';
 
 export default function SettingsScreen() {
   const router = useRouter();
   const colors = useThemeColors();
 
-  const items = useTameStore((state) => state.items);
-  const geminiApiKey = useTameStore((state) => state.geminiApiKey);
-  const setGeminiApiKey = useTameStore((state) => state.setGeminiApiKey);
-  const theme = useTameStore((state) => state.theme);
-  const setTheme = useTameStore((state) => state.setTheme);
-  const clearAll = useTameStore((state) => state.clearAll);
+  const items = useStashStore((state) => state.items);
+  const geminiApiKey = useStashStore((state) => state.geminiApiKey);
+  const setGeminiApiKey = useStashStore((state) => state.setGeminiApiKey);
+  const theme = useStashStore((state) => state.theme);
+  const setTheme = useStashStore((state) => state.setTheme);
+  const clearAll = useStashStore((state) => state.clearAll);
 
   const [apiKeyInput, setApiKeyInput] = useState(geminiApiKey);
   const [showKey, setShowKey] = useState(false);
@@ -54,7 +54,7 @@ export default function SettingsScreen() {
       }
 
       const jsonString = JSON.stringify(items, null, 2);
-      const fileUri = `${(FileSystem as any).documentDirectory}tame_stash_export.json`;
+      const fileUri = `${(FileSystem as any).documentDirectory}stash_export.json`;
       
       // Write to temp file system path
       await FileSystem.writeAsStringAsync(fileUri, jsonString, {
@@ -66,7 +66,7 @@ export default function SettingsScreen() {
       if (isSharingAvailable) {
         await Sharing.shareAsync(fileUri, {
           mimeType: 'application/json',
-          dialogTitle: 'Export Tame Stash',
+          dialogTitle: 'Export Stash',
           UTI: 'public.json', // iOS UTI
         });
       } else {
@@ -218,7 +218,7 @@ export default function SettingsScreen() {
 
         {/* Footer Branding */}
         <View style={styles.footer}>
-          <Text style={[styles.footerTitle, { color: colors.textPrimary }]}>Tame</Text>
+          <Text style={[styles.footerTitle, { color: colors.textPrimary }]}>Stash</Text>
           <Text style={[styles.footerSubtitle, { color: colors.textSecondary }]}>
             Set it aside. Come back when ready.
           </Text>

@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Film, Video, FileText, Clipboard, Check, Loader2 } from 'lucide-react-native';
-import { useTameStore } from '../store/useTameStore';
+import { useStashStore } from '../store/useStashStore';
 import { processItemEnrichment } from '../services/coordinator';
 import { useThemeColors, SPACING, TYPOGRAPHY, LAYOUT } from '../styles/theme';
 
@@ -27,9 +27,9 @@ const URL_REGEX = /(https?:\/\/[^\s]+)/;
 
 export function ShareConfirmationSheet({ sharedValue, onDismiss }: ShareConfirmationSheetProps) {
   const colors = useThemeColors();
-  const addItem = useTameStore((state) => state.addItem);
-  const updateItem = useTameStore((state) => state.updateItem);
-  const deleteItem = useTameStore((state) => state.deleteItem);
+  const addItem = useStashStore((state) => state.addItem);
+  const updateItem = useStashStore((state) => state.updateItem);
+  const deleteItem = useStashStore((state) => state.deleteItem);
 
   const [itemId, setItemId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
@@ -238,7 +238,7 @@ export function ShareConfirmationSheet({ sharedValue, onDismiss }: ShareConfirma
                   >
                     {saveStatus === 'idle' && (
                       <Text style={[styles.actionButtonText, { color: '#0E0E0E' }]}>
-                        Save to Tame
+                        Save to Stash
                       </Text>
                     )}
                     {saveStatus === 'saving' && (
