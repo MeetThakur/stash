@@ -340,6 +340,8 @@ export default function HomeScreen() {
             }
             return <MasonryCard item={item} index={index} />;
           }}
+          // @ts-ignore: types are mismatched but prop is required
+          estimatedItemSize={200}
           contentContainerStyle={styles.gridContent}
         />
       ) : (
@@ -359,6 +361,8 @@ export default function HomeScreen() {
             return <LinkCard item={item.data} index={index} />;
           }}
           getItemType={(item) => item.type}
+          // @ts-ignore: types are mismatched but prop is required
+          estimatedItemSize={104}
           contentContainerStyle={styles.listContent}
         />
       )}

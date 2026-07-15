@@ -108,12 +108,40 @@ export default function SearchScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     try {
-      const simplifiedItems = items.map(item => ({
+      // 1. Basic Local Heuristic Scoring
+      const queryTerms = queryText.toLowerCase().split(/\s+/).filter(t => t.length > 2);
+      
+      const scoredItems = items.map(item => {
+        let score = 0;
+        const searchCorpus = [
+          item.title,
+          item.aiSummary,
+          item.rawNoteText,
+          ...(item.aiTags || []),
+          item.folder
+        ].filter(Boolean).join(' ').toLowerCase();
+
+        queryTerms.forEach(term => {
+          if (searchCorpus.includes(term)) {
+            score += 1; // Simple hit counter
+          }
+        });
+        
+        return { item, score };
+      });
+
+      // 2. Sort by score (descending) and take top 30
+      scoredItems.sort((a, b) => b.score - a.score);
+      const topItems = scoredItems.slice(0, 30).map(si => si.item);
+
+      const simplifiedItems = topItems.map(item => ({
         id: item.id,
         title: item.title,
         type: item.type,
         aiSummary: item.aiSummary || item.rawNoteText
       }));
+      
+      console.log(`[Stash AI] Querying Gemini with top ${simplifiedItems.length} items`);
       const result = await askGeminiAboutStash(queryText, simplifiedItems, geminiApiKey);
       setAiResponse(result);
     } catch (err) {
@@ -311,6 +339,8 @@ export default function SearchScreen() {
             <FlashList
               data={filteredItems}
               renderItem={({ item, index }) => <LinkCard item={item} index={index} />}
+              // @ts-ignore: types are mismatched but prop is required
+              estimatedItemSize={104}
               contentContainerStyle={styles.listContent}
             />
           )}

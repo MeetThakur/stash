@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { ChevronLeft, Eye, EyeOff, Share2, Trash2, Key, SunMoon, Database } from 'lucide-react-native';
 import { useStashStore } from '../store/useStashStore';
 import { useThemeColors, SPACING, TYPOGRAPHY, LAYOUT } from '../styles/theme';
@@ -28,8 +29,13 @@ export default function SettingsScreen() {
   const setTheme = useStashStore((state) => state.setTheme);
   const clearAll = useStashStore((state) => state.clearAll);
 
+  const THEMES = ['dark', 'light', 'system'] as const;
+  
   const [apiKeyInput, setApiKeyInput] = useState(geminiApiKey);
   const [showKey, setShowKey] = useState(false);
+  const [tabWidth, setTabWidth] = useState(0);
+  
+  const indicatorPosition = useSharedValue(THEMES.indexOf(theme));
 
   // Save API key change
   const handleApiKeyChange = (key: string) => {
@@ -41,7 +47,18 @@ export default function SettingsScreen() {
   const handleThemeChange = (selectedTheme: 'dark' | 'light' | 'system') => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setTheme(selectedTheme);
+    indicatorPosition.value = withSpring(THEMES.indexOf(selectedTheme), {
+      mass: 1,
+      damping: 20,
+      stiffness: 200,
+    });
   };
+
+  const indicatorStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: indicatorPosition.value * tabWidth }],
+    };
+  });
 
   // Export JSON file via Sharing
   const handleExportAll = async () => {
@@ -150,17 +167,31 @@ export default function SettingsScreen() {
             <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Appearance</Text>
           </View>
 
-          <View style={[styles.tabSelector, { backgroundColor: colors.surfaceRaised }]}>
-            {(['dark', 'light', 'system'] as const).map((t) => {
+          <View 
+            style={[styles.tabSelector, { backgroundColor: colors.surfaceRaised }]}
+            onLayout={(e) => {
+              const width = e.nativeEvent.layout.width;
+              // Total width minus horizontal padding (3 * 2 = 6). Divide by 3 tabs.
+              setTabWidth((width - 6) / 3);
+            }}
+          >
+            {/* Animated Pill Background */}
+            {tabWidth > 0 && (
+              <Animated.View
+                style={[
+                  styles.animatedPill,
+                  { backgroundColor: colors.surface, width: tabWidth },
+                  indicatorStyle,
+                ]}
+              />
+            )}
+            {THEMES.map((t) => {
               const isActive = theme === t;
               const label = t.charAt(0).toUpperCase() + t.slice(1);
               return (
                 <TouchableOpacity
                   key={t}
-                  style={[
-                    styles.tabSelectorButton,
-                    isActive && { backgroundColor: colors.surface },
-                  ]}
+                  style={styles.tabSelectorButton}
                   onPress={() => handleThemeChange(t)}
                   activeOpacity={0.8}
                 >
@@ -303,6 +334,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderRadius: 8,
     padding: 3,
+    position: 'relative',
+  },
+  animatedPill: {
+    position: 'absolute',
+    top: 3,
+    bottom: 3,
+    left: 3,
+    borderRadius: 6,
   },
   tabSelectorButton: {
     flex: 1,

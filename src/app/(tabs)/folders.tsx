@@ -130,6 +130,9 @@ export default function FoldersScreen() {
         ) : (
           <FlashList
             data={activeFolderItems}
+            keyExtractor={(item) => item.id}
+            // @ts-ignore: types are mismatched but prop is required
+            estimatedItemSize={104}
             renderItem={({ item, index }) => <LinkCard item={item} index={index} />}
             contentContainerStyle={styles.subListContent}
           />
@@ -279,7 +282,11 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   modalBackdrop: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.7)',
     justifyContent: 'center',
     padding: 24,

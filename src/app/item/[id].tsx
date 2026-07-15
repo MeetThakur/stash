@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -109,11 +110,18 @@ export default function ItemDetailScreen() {
   const handleOpenLink = async () => {
     if (!item.url) return;
     try {
-      const supported = await Linking.canOpenURL(item.url);
-      if (supported) {
-        await Linking.openURL(item.url);
+      if (item.url.startsWith('http')) {
+        await WebBrowser.openBrowserAsync(item.url, {
+          presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
+          toolbarColor: colors.background,
+        });
       } else {
-        Alert.alert('Invalid URL', 'Cannot open this URL on your device.');
+        const supported = await Linking.canOpenURL(item.url);
+        if (supported) {
+          await Linking.openURL(item.url);
+        } else {
+          Alert.alert('Invalid URL', 'Cannot open this URL on your device.');
+        }
       }
     } catch (err) {
       console.error('Failed to open link:', err);
@@ -127,6 +135,7 @@ export default function ItemDetailScreen() {
           source={{ uri: item.thumbnailUrl }}
           style={styles.coverImage}
           contentFit="cover"
+          cachePolicy="memory-disk"
         />
       );
     }

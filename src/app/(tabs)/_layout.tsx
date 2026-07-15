@@ -19,12 +19,14 @@ export default function TabLayout() {
           borderTopColor: colors.border,
           borderTopWidth: 1,
           height: 60 + insets.bottom,
+          paddingBottom: insets.bottom,
           elevation: 0,
           shadowOpacity: 0,
         },
         tabBarItemStyle: {
           height: 60,
-          paddingBottom: insets.bottom > 0 ? 4 : 0,
+          justifyContent: 'center',
+          alignItems: 'center',
         },
       }}
     >

@@ -118,6 +118,7 @@ export function MasonryCard({ item, index }: MasonryCardProps) {
                 ]}
                 contentFit="cover"
                 transition={200}
+                cachePolicy="memory-disk"
               />
             ) : isNote && item.rawNoteText ? (
               <View style={[styles.notePreviewContainer, { backgroundColor: colors.surfaceRaised }]}>

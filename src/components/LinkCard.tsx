@@ -203,6 +203,7 @@ export function LinkCard({ item, index }: LinkCardProps) {
                 style={styles.thumbnail}
                 contentFit="cover"
                 transition={200}
+                cachePolicy="memory-disk"
               />
             ) : (
               <View style={[styles.thumbnailPlaceholder, { backgroundColor: colors.surfaceRaised }]}>
